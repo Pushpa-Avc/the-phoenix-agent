@@ -8,14 +8,13 @@ class ReflectionAgent:
         self.todo_manager = TodoManager()
 
     def reflect(self, previous_task_result, current_repository_state):
-        # This is a placeholder for the reflection logic.
-        # In a real implementation, this would analyze the previous task result
-        # and the current repository state to identify areas for improvement.
         print("Performing reflection...")
         print(f"Previous task result: {previous_task_result}")
         print(f"Current repository state: {current_repository_state}")
         
-        self.memory.add_finding(f"Reflection performed with previous result: {previous_task_result} and state: {current_repository_state}")
+        finding_title = "Reflection on Daily Evolution"
+        finding_content = f"Reflection performed with previous result: {previous_task_result} and state: {current_repository_state}"
+        self.memory.add_finding(finding_title, finding_content)
         self.todo_manager.add_task("Reflection completed.")
 
         # For now, let's just return a dummy improvement suggestion.

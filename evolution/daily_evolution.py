@@ -39,19 +39,19 @@ class DailyEvolution:
     def _dummy_research_tool(self, query):
         print(f"Executing research tool with query: {query}")
         result = "Research results for " + query
-        self.memory.add_finding(f"Research: {query} -> {result}")
+        self.memory.add_finding(f"Research Query: {query}", result)
         return result
 
     def _dummy_develop_tool(self, task):
         print(f"Executing development tool for task: {task}")
         result = "Development complete for " + task
-        self.memory.add_decision(f"Development: {task} -> {result}")
+        self.memory.add_decision(f"Development Task: {task}", result)
         return result
 
     def _dummy_test_tool(self, component):
         print(f"Executing test tool for component: {component}")
         result = "Tests passed for " + component
-        self.memory.add_decision(f"Test: {component} -> {result}")
+        self.memory.add_decision(f"Test Component: {component}", result)
         return result
 
     def run_daily_evolution(self, previous_task_result, current_repository_state):
@@ -63,7 +63,7 @@ class DailyEvolution:
         # 1. Reflect
         improvement_suggestion = self.reflection_agent.reflect(
             previous_task_result,
-            current_repository_state + "\n" + self.memory.get_all_memory().__str__()
+            current_repository_state + "\n" + self.memory.get_all_memory()["index"]
         )
         print(f"Reflection suggested: {improvement_suggestion}")
         self.todo_manager.add_task(f"Address reflection: {improvement_suggestion}")
@@ -76,16 +76,30 @@ class DailyEvolution:
 
         # 3. Execute Plan
         for task_name in plan:
-            tool_function = self.tool_registry.get_tool(task_name.replace("_subtask", "_tool"))
-            if tool_function:
-                print(f"Executing tool: {task_name}")
-                # For now, assuming tools take the task_name as input
-                result = tool_function(task_name)
-                print(f"Tool execution result: {result}")
-                self.todo_manager.update_task_status(f"Execute plan: {plan}", "done")
-            else:
-                print(f"Tool not found for task: {task_name}")
-                self.todo_manager.add_task(f"Failed to execute tool: {task_name}")
+            retries = 3
+            tool_executed = False
+            for attempt in range(retries):
+                tool_function = self.tool_registry.get_tool(task_name.replace("_subtask", "_tool"))
+                if tool_function:
+                    try:
+                        print(f"Executing tool: {task_name} (attempt {attempt+1}/{retries})")
+                        # For now, assuming tools take the task_name as input
+                        result = tool_function(task_name)
+                        print(f"Tool execution result: {result}")
+                        self.todo_manager.update_task_status(f"Execute plan: {plan}", "done")
+                        tool_executed = True
+                        break  # Break from retry loop on success
+                    except Exception as e:
+                        print(f"Tool execution failed for {task_name} (attempt {attempt+1}/{retries}): {e}")
+                        if attempt == retries - 1:
+                            self.todo_manager.add_task(f"Failed to execute tool after multiple retries: {task_name}")
+                else:
+                    print(f"Tool not found for task: {task_name}")
+                    self.todo_manager.add_task(f"Failed to execute tool: {task_name}")
+                    tool_executed = True # Mark as executed to avoid further retries for non-existent tool
+                    break
+            if not tool_executed:
+                self.todo_manager.add_task(f"Failed to execute tool: {task_name} after all retries.")
 
         # 4. Validate (dummy for now)
         print("Running validation tests...")

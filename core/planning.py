@@ -8,13 +8,11 @@ class PlanningAgent:
         self.todo_manager = TodoManager()
 
     def plan(self, goal, available_tools):
-        # This is a placeholder for the planning logic.
-        # In a real implementation, this would break down the goal into sub-tasks
-        # and select appropriate tools based on their metadata.
         print(f"Planning for goal: {goal}")
         print(f"Available tools: {available_tools}")
 
-        self.memory.add_decision(f"Planned for goal: {goal} with tools: {available_tools}")
+        plan_description = f"Planned for goal: {goal} with tools: {available_tools}"
+        self.memory.add_decision(f"Plan for {goal}", plan_description)
         self.todo_manager.add_task(f"Plan generated for: {goal}")
 
         # For now, let's just return a dummy plan.
